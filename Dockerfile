@@ -1,12 +1,22 @@
-FROM jenkins/jenkins:lts-jdk17
+# Start with the official Jenkins agent image that includes JDK17
+FROM jenkins/agent:latest-jdk17
+
+# Labels to identify the image
+LABEL maintainer="sjokagyi"
+LABEL description="Jenkins Agent with Python support"
+
+# Install Python and other essential packages
 USER root
-RUN apt-get update && apt-get install -y lsb-release python3-pip
-RUN curl -fsSLo /usr/share/keyrings/docker-archive-keyring.asc \
-  https://download.docker.com/linux/debian/gpg
-RUN echo "deb [arch=$(dpkg --print-architecture) \
-  signed-by=/usr/share/keyrings/docker-archive-keyring.asc] \
-  https://download.docker.com/linux/debian \
-  $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
-RUN apt-get update && apt-get install -y docker-ce-cli
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip && \
+    ln -sf /usr/bin/python3 /usr/bin/python && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install additional Python libraries if needed
+# RUN pip3 install <your-required-python-libraries>
+
+# Switch back to Jenkins user
 USER jenkins
-RUN jenkins-plugin-cli --plugins "blueocean:1.25.3 docker-workflow:1.28"
+
+# Define the default command
+CMD ["jenkins-agent"]
